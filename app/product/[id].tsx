@@ -17,6 +17,7 @@ export default function ProductDetails() {
   const [selectedColor, setSelectedColor] = useState<string>();
   const [item, setItem] = useState(null);
   const [quantity, setQuantity] = useState(1);
+  const [availableItems, setAvailableItems] = useState([]);
 
   useEffect(() => {
     const getData = async () => {
@@ -36,11 +37,8 @@ export default function ProductDetails() {
     const setData = () => {
       if(product){
         setQuantity(1)
-        if(selectedColor && selectedSize){
-          setItem(product?.items.find(item => item.size === selectedSize && item.color === selectedColor))
-        }else{
-          setItem(product.items.sort((a, b) => a.price - b.price)[0])
-        }
+        if(selectedColor && selectedSize) setItem(product?.items.find(item => item.color === selectedColor && item.size === selectedSize))
+        else setAvailableItems(product?.items.filter(item => item.color === selectedColor || item.size === selectedSize))
       }
     }
 
@@ -59,7 +57,6 @@ export default function ProductDetails() {
       console.error(err)
     }
   }
-
 
   if (!product) {
     return <Text>Loading...</Text>;
@@ -110,6 +107,7 @@ export default function ProductDetails() {
                 key={`size-${index}`} 
                 label={item.toString()} 
                 isSelected={selectedSize === item}
+                disabled={selectedColor ? !availableItems.find(availableItem => availableItem.size === item && availableItem.stock !== 0) : false}
                 onClick={() => setSelectedSize(prev => prev === item ? '' : item.toString())}
               />
             ))}
@@ -119,6 +117,7 @@ export default function ProductDetails() {
           <View style={styles.chipContainer}>
             {[...new Set(product.items.map(item => item.color))].map((item, index) => (
               <Chip 
+                disabled={selectedSize ? !availableItems.find(availableItem => availableItem.color === item && availableItem.stock !== 0) : false}
                 key={`color-${index}`} label={item.toString()} 
                 isSelected={selectedColor === item}
                 onClick={() => setSelectedColor(prev => prev === item ? '' : item.toString())}
