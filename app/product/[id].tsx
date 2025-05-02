@@ -172,8 +172,12 @@ export default function ProductDetails() {
             <ThemedButton style={{ backgroundColor: '#e0e0e0', flex: 1}} disabled={!selectedColor || !selectedSize || item.stock === 0}>
               <Text style={{ textAlign: 'center' }}>Add to cart</Text>
             </ThemedButton>
-            <ThemedButton style={{ flex: 1, justifyContent: 'center'}} disabled={!selectedColor || !selectedSize || item.stock === 0}>
-              <Text style={{ textAlign: 'center', color: 'white'}} onPress={checkout}>Buy now</Text>
+            <ThemedButton 
+              onPress={checkout}
+              style={{ flex: 1, justifyContent: 'center'}} 
+              disabled={!selectedColor || !selectedSize || item.stock === 0}
+            >
+              <Text style={{ textAlign: 'center', color: 'white'}}>Buy now</Text>
             </ThemedButton>
 
         </View>
