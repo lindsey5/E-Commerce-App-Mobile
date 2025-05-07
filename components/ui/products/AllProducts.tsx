@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { View, StyleSheet } from "react-native";
-import { fetchData } from "../../services/api";
+import { View, StyleSheet, ActivityIndicator } from "react-native";
+import { fetchData } from "../../../services/api";
 import ProductCard from "./ProductCard";
 
 const AllProducts = () => {
@@ -15,6 +15,10 @@ const AllProducts = () => {
 
     fetchProducts();
   }, []);
+
+  if(products.length === 0) return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+        <ActivityIndicator size="large" color="#9137db" />
+  </View>
 
   return (
     <View style={styles.container}>

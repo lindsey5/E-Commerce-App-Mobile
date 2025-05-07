@@ -1,7 +1,7 @@
 import { ScrollView, StyleSheet, Linking} from "react-native";
 import ThemedView from "../../components/ThemedView";
-import Header from "../../components/partials/header";
-import AllProducts from "../../components/products/AllProducts";
+import Header from "../../components/ui/partials/header";
+import AllProducts from "../../components/ui/products/AllProducts";
 
 const Index = () => {
 

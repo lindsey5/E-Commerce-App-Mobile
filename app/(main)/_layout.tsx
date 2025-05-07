@@ -26,11 +26,21 @@ export default function RootLayout() {
           )}}
         />
         <Tabs.Screen
+          name="cart/index"
+          options={{ title: "Cart", tabBarIcon: ({ focused }) => (
+            <Ionicons 
+              size={24} 
+              name={focused ? 'cart': 'cart-outline'} 
+              color={focused ? theme.iconColorFocused : theme.iconColor} 
+            />
+          )}}
+        />
+        <Tabs.Screen
           name="orders/index"
           options={{ title: "Orders", tabBarIcon: ({ focused }) => (
             <Ionicons 
               size={24} 
-              name={focused ? 'cart': 'cart-outline'} 
+              name={focused ? 'receipt': 'receipt-outline'} 
               color={focused ? theme.iconColorFocused : theme.iconColor} 
             />
           )}}

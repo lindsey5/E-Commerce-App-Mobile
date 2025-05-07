@@ -1,12 +1,15 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Image, Text, View, StyleSheet, Pressable, ScrollView, TouchableOpacity, Linking } from 'react-native';
+import { Image, Text, View, StyleSheet, Pressable, ScrollView, TouchableOpacity, Linking, ActivityIndicator } from 'react-native';
 import { fetchData, postData } from '../../services/api';
 import ImageViewer from 'react-native-image-zoom-viewer';
 import ThemedText from '../../components/ThemedText';
 import Chip from '../../components/Chip';
 import { Ionicons } from '@expo/vector-icons';
 import ThemedButton from '../../components/ThemedButton';
+import useCart from '../../hooks/useCart';
+import CustomBadge from '../../components/Badge';
+import QuantityCounter from '../../components/ui/QuantityCounter';
 
 export default function ProductDetails() {
   const { id } = useLocalSearchParams();
@@ -18,6 +21,21 @@ export default function ProductDetails() {
   const [item, setItem] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [availableItems, setAvailableItems] = useState([]);
+  const { cart, addToCart } = useCart();
+
+  const handleCart = () => {
+    addToCart({
+      id: item._id,
+      product_id: product._id,
+      sku: item.sku,
+      name: product.name,
+      quantity,
+      price: item.price,
+      image: product.image,
+      size: item.size,
+      color: item.color
+    });
+  }
 
   useEffect(() => {
     const getData = async () => {
@@ -59,16 +77,27 @@ export default function ProductDetails() {
   }
 
   if (!product) {
-    return <Text>Loading...</Text>;
+    return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+      <ActivityIndicator size="large" color="#9137db" />
+    </View>
   }
   return (
     <View style={styles.container}>
-      <Pressable
-      style={{ position: 'absolute', left: 5, top: 5, zIndex: 5 }}
-      onPress={() => router.back()}
-    >
-      <Ionicons size={30} name="arrow-back" />
-    </Pressable>
+
+      <TouchableOpacity 
+        onPress={() => router.push('cart')}
+        style={[{ right: 10, top: 20 }, styles.floatButton]}
+      >
+        <CustomBadge text={cart.length.toString()}/>
+        <Ionicons size={30} name="cart" color={"white"}/>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[{ left: 5, top: 20 }, styles.floatButton]}
+        onPress={() => router.back()}
+      >
+        <Ionicons size={30} name="arrow-back" color={"white"}/>
+      </TouchableOpacity>
+
       <Pressable style={{ borderBottomWidth: 1, borderBottomColor: '#e0e0e0'}}onPress={() => setShowImage(true)}>
         <Image style={styles.productImage} source={{ uri: product.image }} resizeMode='contain'/>
       </Pressable>
@@ -82,7 +111,7 @@ export default function ProductDetails() {
         </View>
       )}
 
-      <View style={{ padding: 20}}>
+      <ScrollView style={{ padding: 20}}>
         <ThemedText 
             title
             style={styles.productName}
@@ -92,13 +121,6 @@ export default function ProductDetails() {
         <Text style={{ marginTop: 10, fontSize: 20}}>
         ₱{item?.price}
         </Text>
-      </View>
-      <ScrollView
-        style={{
-          marginTop: 10,
-          paddingHorizontal: 20,
-        }}
-      >
         <View style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <Text>Sizes</Text>
           <View style={styles.chipContainer}>
@@ -125,51 +147,36 @@ export default function ProductDetails() {
             ))}
           </View>
         </View>
-      </ScrollView>
+        </ScrollView>
       <View style={{
-        position: 'absolute', 
-        bottom: 0,
+        backgroundColor: 'white',
         width: '100%',
         paddingHorizontal: 10,
         paddingBottom: 20,
         paddingTop: 10,
         borderTopWidth: 1,
-        borderTopColor: '#e0e0e0'
+        borderTopColor: '#e0e0e0',
+        zIndex: 10,
       }}>
         <View style={{ marginBottom: 10, paddingVertical: 10, flexDirection: 'row', justifyContent: 'space-between'}}>
           <Text>Quantity</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center'}}>
-            <View style={{ flexDirection: 'row', alignItems: 'center'}}>
-              <TouchableOpacity 
-              onPress={() => setQuantity(quantity - 1)}
-                style={[{ borderWidth: 1, borderColor: '#bdbdbd'}, 
-                quantity === 1 && { opacity: 0.5}]}
-                disabled={quantity === 1}
-              >
-                <Ionicons size={25} name={"remove"} color={quantity === 1 && "#e0e0e0"}/>
-              </TouchableOpacity>
-
-              <View style={{ width: 30}}>
-                <Text style={{ textAlign: 'center'}}>{quantity}</Text>
-              </View>
-              
-              <TouchableOpacity 
-                onPress={() => setQuantity(quantity + 1)}
-                style={[{ borderWidth: 1, borderColor: '#bdbdbd'}, 
-                  quantity === item.stock && { opacity: 0.5}]}
-                disabled={quantity === item.stock}
-              >
-                <Ionicons size={25} name={"add"} color={quantity === item.stock && "#e0e0e0"}/>
-              </TouchableOpacity>
-            </View>
-          </View>
+          <QuantityCounter 
+            item={item}
+            quantity={quantity}
+            setQuantity={setQuantity}
+          />
         </View>
+
         <View style={{ 
           justifyContent: 'space-between',
           flexDirection: 'row',
           gap: 10,
           }}>
-            <ThemedButton style={{ backgroundColor: '#e0e0e0', flex: 1}} disabled={!selectedColor || !selectedSize || item.stock === 0}>
+            <ThemedButton 
+              onPress={handleCart}
+              style={{ backgroundColor: '#e0e0e0', flex: 1}} 
+              disabled={!selectedColor || !selectedSize || item.stock === 0}
+            >
               <Text style={{ textAlign: 'center' }}>Add to cart</Text>
             </ThemedButton>
             <ThemedButton 
@@ -203,7 +210,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     position: 'absolute',
-    zIndex: 2,
+    zIndex: 20,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
@@ -228,5 +235,12 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap', 
     rowGap: 5, 
     columnGap: 5
+  },
+  floatButton: {
+    position: 'absolute',
+    zIndex: 5,
+    backgroundColor: 'grey',
+    borderRadius: '50%',
+    padding: 5
   }
 });

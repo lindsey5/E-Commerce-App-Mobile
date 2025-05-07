@@ -1,12 +1,18 @@
 import { View, StyleSheet, TouchableOpacity } from "react-native"
 import { Ionicons } from "@expo/vector-icons";
-import CustomInput from "../CustomInput";
+import CustomInput from "../../CustomInput";
+import CustomBadge from "../../Badge";
+import useCart from "../../../hooks/useCart";
+import { useRouter } from "expo-router";
 
 const Header = () => {
+    const { cart } = useCart();
+    const router = useRouter();
 
     return <View style={styles.header}>
         <CustomInput placeholder="Search" style={{ flex: 1, marginRight: 20 }}/>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push(`/cart`)}>
+            {cart.length > 0 && <CustomBadge text={cart.length.toString()}/>}
             <Ionicons size={30} name={"cart-outline"} color={'#fff'} />
         </TouchableOpacity>
     </View>
