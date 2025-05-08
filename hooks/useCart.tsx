@@ -3,6 +3,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ToastAndroid, Platform, Alert, Linking } from "react-native";
 import { CartItem } from "../types/Cart";
 import { postData } from "../services/api";
+import { getToken } from "../services/auth";
+import { useRouter } from "expo-router";
 
 const showAddedPrompt = () => {
     if (Platform.OS === 'android') {
@@ -14,6 +16,7 @@ const showAddedPrompt = () => {
 
 const useCart = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
     const getValue = async () => {
@@ -73,29 +76,35 @@ const useCart = () => {
     );
   }
 
-  const checkout = (items) => {
-    Alert.alert(
-      "Confirm Checkout",
-      "Are you sure you want to proceed to checkout?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Yes",
-          onPress: async () => {
-            try{  
-              const response = await postData('/api/payment', items)
-              Linking.openURL(response.checkout_url).catch(err => console.error("Failed to open URL:", err));
-            }catch(err){
-              console.error(err)
-            }
+  const checkout = async (items) => {
+    const value = await getToken();
+
+    if(value){
+      Alert.alert(
+        "Confirm Checkout",
+        "Are you sure you want to proceed to checkout?",
+        [
+          {
+            text: "Cancel",
+            style: "cancel",
           },
-        },
-      ],
-      { cancelable: true }
-    );
+          {
+            text: "Yes",
+            onPress: async () => {
+              try{  
+                const response = await postData('/api/payment', items)
+                router.push(`/webview?url=${encodeURIComponent(response.checkout_url)}`);
+              }catch(err){
+                console.error(err)
+              }
+            },
+          },
+        ],
+        { cancelable: true }
+      );
+    }else{
+      router.push('login')
+    }
   }
 
   return { cart, addToCart, updateItem, checkout, removeItem };

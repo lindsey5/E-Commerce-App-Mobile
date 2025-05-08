@@ -27,7 +27,7 @@ const Cart = () => {
         return () => {
           socket.disconnect();
         };
-    }, [])
+    }, [socket])
 
     return <View style={styles.container}>
         <View style={styles.header}>
