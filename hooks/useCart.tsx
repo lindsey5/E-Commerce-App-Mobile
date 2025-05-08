@@ -19,7 +19,7 @@ const useCart = () => {
     const getValue = async () => {
       const value = await AsyncStorage.getItem("cart");
       if (value) setCart(JSON.parse(value));
-    };
+    }
 
     getValue();
   }, []);
@@ -50,19 +50,55 @@ const useCart = () => {
     await AsyncStorage.setItem("cart", JSON.stringify(updatedCart));
   }
 
-  const checkout = async () => {
-      try{
-        const response = await postData('/api/payment',
-          cart.map(item => ({ currency: "PHP", amount: item.price * 100, name: item.name,  quantity: item.quantity }))
-        )
-        
-        Linking.openURL(response.checkout_url).catch(err => console.error("Failed to open URL:", err));
-      }catch(err){
-        console.error(err)
-      }
+  const removeItem = async (id) => {
+    Alert.alert(
+      "Confirm Removal",
+      "Are you sure you want to remove this item?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Yes",
+          onPress: async () => {
+            const updatedCart = cart.filter((item) => item.id != id)
+
+            setCart(updatedCart);
+            await AsyncStorage.setItem("cart", JSON.stringify(updatedCart));
+          },
+        },
+      ],
+      { cancelable: true }
+    );
   }
 
-  return { cart, addToCart, updateItem, checkout };
+  const checkout = (items) => {
+    Alert.alert(
+      "Confirm Checkout",
+      "Are you sure you want to proceed to checkout?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Yes",
+          onPress: async () => {
+            try{  
+              const response = await postData('/api/payment', items)
+              Linking.openURL(response.checkout_url).catch(err => console.error("Failed to open URL:", err));
+            }catch(err){
+              console.error(err)
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  }
+
+  return { cart, addToCart, updateItem, checkout, removeItem };
 };
 
 export default useCart;

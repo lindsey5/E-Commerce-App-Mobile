@@ -67,10 +67,10 @@ export default function ProductDetails() {
   const checkout = async () => {
     try{
       const response = await postData('/api/payment',
-        [{ currency: "PHP", amount: item.price * 100, name: product.name,  quantity }]
+        [item]
       )
-      
-      Linking.openURL(response.checkout_url).catch(err => console.error("Failed to open URL:", err));
+      console.log(response.data)
+      //Linking.openURL(response.checkout_url).catch(err => console.error("Failed to open URL:", err));
     }catch(err){
       console.error(err)
     }

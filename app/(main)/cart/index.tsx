@@ -5,10 +5,29 @@ import ThemedText from "../../../components/ThemedText"
 import { useRouter } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
 import ThemedButton from "../../../components/ThemedButton"
+import { useEffect, useState } from "react"
+import io from 'socket.io-client';
+
+const socket = io('http://localhost:3000', {
+    withCredentials: true,
+}); 
 
 const Cart = () => {
-    const { cart, checkout, updateItem } = useCart()
+    const { cart, checkout, updateItem, removeItem } = useCart()
     const router = useRouter();
+    const [isEdit, setIsEdit] = useState(false);
+
+    useEffect(() => {
+        socket.on('payment-success', (itemIds) => {
+            for(const id in itemIds){
+                removeItem(id);
+            }
+        });
+    
+        return () => {
+          socket.disconnect();
+        };
+    }, [])
 
     return <View style={styles.container}>
         <View style={styles.header}>
@@ -21,11 +40,26 @@ const Cart = () => {
                 </TouchableOpacity>
                 <ThemedText title style={styles.title}>Shopping Cart</ThemedText>
             </View>
-            <Text style={{ fontSize: 16 }}>{cart.length} items</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between'}}>
+                <Text style={{ fontSize: 16 }}>{cart.length} items</Text>
+                <TouchableOpacity onPress={() => setIsEdit(!isEdit)}>
+                    <Text style={{ color: !isEdit ? '#9137db' : 'red'}}>{!isEdit ? 'EDIT' : 'CANCEL'}</Text>
+                </TouchableOpacity>
+            </View>
         </View>
-        <ScrollView style={{ paddingHorizontal: 5, paddingVertical: 15}} showsVerticalScrollIndicator={false}>
-            {cart.length > 0 && cart.map((item) => <CartCard key={item.id} item={item} updateItem={updateItem} />)}
-        </ScrollView>
+        {cart.length > 0 ? <ScrollView style={{ paddingHorizontal: 5, paddingVertical: 15}} showsVerticalScrollIndicator={false}>
+            {cart.length > 0 && cart.map((item) => <CartCard 
+                key={item.id} 
+                item={item} 
+                updateItem={updateItem} 
+                checkout={checkout}
+                remove={removeItem}
+                isEdit={isEdit}
+            />)}
+        </ScrollView> :
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+            <Text>Your cart is empty</Text>
+        </View>}
         <View style={{ padding: 20, backgroundColor: 'white', borderTopWidth: 1, borderTopColor: '#9CA3AF'}}>
             <View style={{ 
                 display: 'flex', 
@@ -38,7 +72,10 @@ const Cart = () => {
                 <Text style={{ fontSize: 17}}>Total</Text>
                 <Text style={{ fontSize: 20, fontWeight: 'bold'}}>₱{cart.reduce((total, item) => (item.price * item.quantity) + total, 0)}</Text>
             </View>
-            <ThemedButton onPress={checkout} disabled={cart.length === 0}>
+            <ThemedButton 
+                onPress={() => checkout(cart)}
+                disabled={cart.length === 0}
+            >
                 <Text style={{ color: 'white', textAlign: 'center', fontSize: 17}}>Check out</Text>
             </ThemedButton>
         </View>

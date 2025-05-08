@@ -1,11 +1,20 @@
-import { View, StyleSheet, Image, Text, Pressable } from "react-native"
+import { View, StyleSheet, Image, Text, Pressable, TouchableOpacity } from "react-native"
 import { CartItem } from "../../../types/Cart"
 import QuantityCounter from "../QuantityCounter"
 import { useEffect, useState } from "react"
 import { fetchData } from "../../../services/api"
 import { useRouter } from "expo-router"
+import ThemedButton from "../../ThemedButton"
 
-const CartCard = ({ item, updateItem } : { item : CartItem, updateItem: (value : string, value1: number) => void}) => {
+interface ICard{
+    item : CartItem;
+    updateItem: (value : string, value1: number) => void
+    checkout: (item : object[]) => void
+    remove : (id : string) => void
+    isEdit : boolean
+}
+
+const CartCard = ({ item, updateItem, checkout, remove, isEdit } : ICard) => {
     const [stock, setStock] = useState<number>();
     const [quantity, setQuantity] = useState<number>()
     const router = useRouter();
@@ -25,8 +34,10 @@ const CartCard = ({ item, updateItem } : { item : CartItem, updateItem: (value :
         setQuantity(item.quantity)
     }
 
-    return <Pressable style={styles.card} onPress={() => router.push(`/product/${item.product_id}`)}>
-       <Image source={{ uri: item.image }} style={styles.image} resizeMode="cover"/>
+    return <View style={styles.card}>
+       <TouchableOpacity onPress={() => router.push(`/product/${item.product_id}`)}>
+        <Image source={{ uri: item.image }} style={styles.image} resizeMode="cover"/>
+       </TouchableOpacity>
        <View 
             style={{ 
                 flex: 1, 
@@ -47,8 +58,23 @@ const CartCard = ({ item, updateItem } : { item : CartItem, updateItem: (value :
                     setQuantity={handleQuantity}
                 />
             </View>
+            {isEdit && <View style={{ flexDirection: 'row', justifyContent: 'space-between'}}>
+                <ThemedButton 
+                    onPress={() => remove(item.id)} 
+                    style={{ paddingVertical: 10, backgroundColor: 'white', borderWidth: 1, borderColor: 'red'}}
+                >
+                    <Text style={{ color: 'red', textAlign: 'center', fontSize: 12}}>Remove</Text>
+                </ThemedButton>
+                <ThemedButton 
+                    onPress={() => checkout([item])} 
+                    disabled={quantity === 0}
+                    style={{ paddingVertical: 10}}
+                >
+                    <Text style={{ color: 'white', textAlign: 'center', fontSize: 12}}>Check out</Text>
+                </ThemedButton>
+            </View>}
        </View>
-    </Pressable>
+    </View>
 }
 
 export default CartCard
@@ -58,7 +84,7 @@ const styles = StyleSheet.create({
         padding: 20,
         backgroundColor: 'white',
         width: '100%',
-        height: 160,
+        height: 200,
         marginBottom: 10,
         flexDirection: 'row',
         borderRadius: 30,
