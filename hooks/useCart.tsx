@@ -80,28 +80,8 @@ const useCart = () => {
     const value = await getToken();
 
     if(value){
-      Alert.alert(
-        "Confirm Checkout",
-        "Are you sure you want to proceed to checkout?",
-        [
-          {
-            text: "Cancel",
-            style: "cancel",
-          },
-          {
-            text: "Yes",
-            onPress: async () => {
-              try{  
-                const response = await postData('/api/payment', items)
-                router.push(`/webview?url=${encodeURIComponent(response.checkout_url)}`);
-              }catch(err){
-                console.error(err)
-              }
-            },
-          },
-        ],
-        { cancelable: true }
-      );
+      await AsyncStorage.setItem("checkout-items", JSON.stringify(items));
+      router.push('checkout');
     }else{
       router.push('login')
     }

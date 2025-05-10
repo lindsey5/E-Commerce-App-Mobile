@@ -5,12 +5,38 @@ import ThemedButton from "../../components/ThemedButton";
 import ThemedText from "../../components/ThemedText";
 import CustomInput from "../../components/CustomInput";
 import { useRouter } from "expo-router";
+import { useState } from "react";
+import { postData } from "../../services/api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Login = () => {
     const router = useRouter();
+    const [error, setError] = useState('');
+    const [data, setData] = useState({
+        email: '',
+        password: ''
+    })
 
-    const handleSubmit = () => {
-        console.log('Login successful')
+    const handleSubmit = async() => {
+        setError('')
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!emailRegex.test(data.email)) {
+            setError('Invalid email format');
+        }else if(data.email && data.password){
+            try{
+                const response = await postData('/api/auth/login', data);
+                if(response.success){
+                    await AsyncStorage.setItem("user", JSON.stringify(response.user));
+                    await AsyncStorage.setItem("token", JSON.stringify(response.token));
+                    router.push('/')
+                }else{
+                    setError(response.message);
+                }
+            }catch(err){
+                setError(err.response.data.message || err.response.data.errors[0])
+            }
+        }
     }
 
     return (
@@ -21,10 +47,22 @@ const Login = () => {
 
         >
             <ThemedText title={true} style={styles.title}>Login</ThemedText>
-            <Spacer height={50}/>
-            <CustomInput placeholder={"Email"} style={{ height: 60 }}/>
+            {error && <Text style={{ color: 'red', marginTop: 10, fontSize: 16}}>{error}</Text>}
+            <Spacer height={30}/>
+            <CustomInput 
+                value={data.email}
+                placeholder={"Email"} 
+                style={{ height: 60 }}
+                onChangeText={(value) => setData({...data, email: value})}
+            />
             <Spacer />
-            <CustomInput placeholder={"Password"} style={{ height: 60 }} secureTextEntry={true}/>
+            <CustomInput 
+                value={data.password}
+                placeholder={"Password"} 
+                style={{ height: 60 }} 
+                secureTextEntry={true}
+                onChangeText={(value) => setData({...data, password: value})}
+            />
             <Spacer height={30}/>
             <Pressable style={styles.forgotPasswordContainer}>
                 <Text style={{borderBottomWidth: 1, borderColor: '#9137db', color: '#9137db'}}>Forgot Password?</Text>

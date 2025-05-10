@@ -42,6 +42,7 @@ const Signup = () => {
             const { confirmPassword, ...rest} = data;
             const response = await postData('/api/auth/signup', rest);
             if(response.success) {
+                await AsyncStorage.setItem("user", JSON.stringify(response.newUser));
                 await AsyncStorage.setItem("token", JSON.stringify(response.token));
                 router.push('/')
             }

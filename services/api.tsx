@@ -13,7 +13,6 @@ export const fetchData = async (endpoint) => {
     });
     return response.data;
   } catch (error) {
-
     throw error; 
   }
 };

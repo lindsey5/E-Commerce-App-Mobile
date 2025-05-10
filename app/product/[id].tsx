@@ -11,6 +11,7 @@ import useCart from '../../hooks/useCart';
 import CustomBadge from '../../components/Badge';
 import QuantityCounter from '../../components/ui/QuantityCounter';
 import { getToken } from '../../services/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function ProductDetails() {
   const { id } = useLocalSearchParams();
@@ -69,24 +70,18 @@ export default function ProductDetails() {
     const value = await getToken();
         
     if(value){
-      try{
-        const response = await postData('/api/payment',
-          [{
-            id: item._id,
-            product_id: product._id,
-            sku: item.sku,
-            name: product.name,
-            quantity,
-            price: item.price,
-            image: product.image,
-            size: item.size,
-            color: item.color
-          }]
-        )
-        Linking.openURL(response.checkout_url).catch(err => console.error("Failed to open URL:", err));
-      }catch(err){
-        console.error(err)
-      }
+      await AsyncStorage.setItem("checkout-items", JSON.stringify([{
+        id: item._id,
+        product_id: product._id,
+        sku: item.sku,
+        name: product.name,
+        quantity,
+        price: item.price,
+        image: product.image,
+        size: item.size,
+        color: item.color
+      }]));
+      router.push('checkout');
     }else{
       router.push('login')
     }

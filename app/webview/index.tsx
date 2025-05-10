@@ -6,8 +6,6 @@ import { useLocalSearchParams } from 'expo-router';
 const WebViewScreen = () => {
   const { url } = useLocalSearchParams();
 
-  console.log(url)
-
   if (!url) {
     return (
       <View style={styles.container}>
