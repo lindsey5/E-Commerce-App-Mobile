@@ -25,18 +25,9 @@ export default function ProductDetails() {
   const [availableItems, setAvailableItems] = useState([]);
   const { cart, addToCart } = useCart();
 
-  const handleCart = () => {
-    addToCart({
-      id: item._id,
-      product_id: product._id,
-      sku: item.sku,
-      name: product.name,
-      quantity,
-      price: item.price,
-      image: product.image,
-      size: item.size,
-      color: item.color
-    });
+  const handleCart = async () => {
+    const value = await getToken();
+    value ? addToCart(item._id,quantity) : router.push('login')
   }
 
   useEffect(() => {
@@ -71,7 +62,7 @@ export default function ProductDetails() {
         
     if(value){
       await AsyncStorage.setItem("checkout-items", JSON.stringify([{
-        id: item._id,
+        item_id: item._id,
         product_id: product._id,
         sku: item.sku,
         name: product.name,
@@ -99,7 +90,7 @@ export default function ProductDetails() {
         onPress={() => router.push('cart')}
         style={[{ right: 10, top: 20 }, styles.floatButton]}
       >
-        <CustomBadge text={cart.length.toString()}/>
+        {cart.length > 0 && <CustomBadge text={cart.length.toString()}/>}
         <Ionicons size={30} name="cart" color={"white"}/>
       </TouchableOpacity>
       <TouchableOpacity

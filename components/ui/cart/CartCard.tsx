@@ -1,4 +1,4 @@
-import { View, StyleSheet, Image, Text, Pressable, TouchableOpacity } from "react-native"
+import { View, StyleSheet, Image, Text, TouchableOpacity } from "react-native"
 import { CartItem } from "../../../types/Cart"
 import QuantityCounter from "../QuantityCounter"
 import { useEffect, useState } from "react"
@@ -21,18 +21,26 @@ const CartCard = ({ item, updateItem, checkout, remove, isEdit } : ICard) => {
 
     useEffect(() => {
         const getItemAsync = async () => {
-            const response = await fetchData(`/api/item/${item.id}`)
+            const response = await fetchData(`/api/item/${item.item_id}`)
             setStock(response.item.stock)
-            quantity > response.item.stock ? setQuantity(response.item.stock) : setQuantity(item.quantity)
+            item.quantity > response.item.stock ? setQuantity(response.item.stock) : setQuantity(item.quantity)
         }
         
         getItemAsync()
-    }, [item])
+    }, [])
 
-    const handleQuantity = (quantity : number) => {
-        updateItem(item.id, quantity)
-        setQuantity(item.quantity)
-    }
+
+    useEffect(() => {
+
+        const handler = setTimeout(() => {
+            if (quantity) {
+                updateItem(item.id, quantity);
+            }
+        }, 600);
+
+        return () => clearTimeout(handler);
+
+    }, [quantity]);
 
     return <View style={styles.card}>
        <TouchableOpacity onPress={() => router.push(`/product/${item.product_id}`)}>
@@ -55,7 +63,7 @@ const CartCard = ({ item, updateItem, checkout, remove, isEdit } : ICard) => {
                 <QuantityCounter 
                     item={{ stock }}
                     quantity={quantity}
-                    setQuantity={handleQuantity}
+                    setQuantity={setQuantity}
                 />
             </View>
             {isEdit && <View style={{ flexDirection: 'row', justifyContent: 'space-between'}}>
@@ -84,7 +92,7 @@ const styles = StyleSheet.create({
         padding: 20,
         backgroundColor: 'white',
         width: '100%',
-        height: 200,
+        height: 170,
         marginBottom: 10,
         flexDirection: 'row',
         borderRadius: 30,

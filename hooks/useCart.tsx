@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { ToastAndroid, Platform, Alert, Linking } from "react-native";
-import { CartItem } from "../types/Cart";
-import { postData } from "../services/api";
+import { ToastAndroid, Platform, Alert } from "react-native";
 import { getToken } from "../services/auth";
 import { useRouter } from "expo-router";
+import { deleteData, fetchData, postData, updateData } from "../services/api";
 
 const showAddedPrompt = () => {
     if (Platform.OS === 'android') {
@@ -12,34 +11,27 @@ const showAddedPrompt = () => {
     } else {
       Alert.alert("Added to cart!");
     }
-  };
+};
 
 const useCart = () => {
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart, setCart] = useState([]);
   const router = useRouter();
 
-  useEffect(() => {
-    const getValue = async () => {
-      const value = await AsyncStorage.getItem("cart");
-      if (value) setCart(JSON.parse(value));
-    }
+  const getValue = async () => {
+      const response = await fetchData('/api/cart');
+      setCart(response.cart);
+  }
 
+  useEffect(() => {
     getValue();
   }, []);
 
-  const addToCart = async (newItem: CartItem) => {
-    const updatedCart = cart.some((item) => item.id === newItem.id)
-      ? cart.map((item) =>
-          item.id === newItem.id
-            ? { ...item, quantity: item.quantity + newItem.quantity }
-            : item
-        )
-      : [...cart, newItem];
-
-    setCart(updatedCart);
-
-    await AsyncStorage.setItem("cart", JSON.stringify(updatedCart));
-    showAddedPrompt();
+  const addToCart = async (id : string, quantity : number) => {
+    const response = await postData('/api/cart', { item_id: id, quantity: quantity});
+    if(response.success){
+      await getValue();
+      showAddedPrompt();
+    }
   };
 
   const updateItem = async (id : string, newQuantity : number) => {
@@ -50,7 +42,8 @@ const useCart = () => {
     )
 
     setCart(updatedCart);
-    await AsyncStorage.setItem("cart", JSON.stringify(updatedCart));
+    await updateData(`/api/cart/${id}`, { quantity: newQuantity});
+
   }
 
   const removeItem = async (id) => {
@@ -68,7 +61,7 @@ const useCart = () => {
             const updatedCart = cart.filter((item) => item.id != id)
 
             setCart(updatedCart);
-            await AsyncStorage.setItem("cart", JSON.stringify(updatedCart));
+            await deleteData(`/api/cart/${id}`);
           },
         },
       ],

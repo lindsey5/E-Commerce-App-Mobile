@@ -1,10 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { View, Text, StyleSheet, TextInput, TextInputProps, TouchableOpacity, Switch } from "react-native"
-import { postData } from "../../services/api";
+import { fetchData, postData, updateData } from "../../services/api";
 import { useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import ThemedButton from "../../components/ThemedButton";
+import useSocket from "../../hooks/useSocket";
 
 interface DetailInputProps extends TextInputProps{
     label: string,
@@ -37,7 +38,11 @@ const DetailInput = ({ label, value, ...props} : DetailInputProps) => {
 
 const CheckoutPage = () => {
     const router = useRouter();
-    const [address, setAddress] = useState('');
+    const [address, setAddress] = useState({
+        address: '',
+        zip: '',
+        city: '',
+    });
     const [isSaved, setIsSaved] = useState(true);
     const [items, setItems] = useState([]);
     const [user, setUser] = useState({
@@ -48,7 +53,13 @@ const CheckoutPage = () => {
     useEffect(() => {
         const getCheckoutItemsAsync = async () => {
             setItems(JSON.parse(await AsyncStorage.getItem("checkout-items")))
-            setUser(JSON.parse(await AsyncStorage.getItem("user")))
+            const response = await fetchData('/api/user');
+            setUser({
+                firstname: response.user.firstname,
+                lastname: response.user.lastname
+            })
+
+            setAddress(response.user.address)
         }
 
         getCheckoutItemsAsync()
@@ -56,12 +67,22 @@ const CheckoutPage = () => {
 
     const pay = async () => {
         try{  
-            const response = await postData('/api/payment', items)
-            router.push(`/webview?url=${encodeURIComponent(response.checkout_url)}`);
+            const response = await postData('/api/payment', { items, address, user })
+            router.replace(`/webview?url=${encodeURIComponent(response.checkout_url)}`);
         }catch(err){
             console.error(err)
         }
     }
+
+    useEffect(() => {
+        const updateAddress = async () => {
+            await updateData('/api/user', {address});
+        }
+
+        if(isSaved && address.address && address.zip && address.city) {
+            updateAddress()
+        }
+    }, [isSaved, address])
 
     return <View style={styles.container}>
         <View style={styles.header}>
@@ -74,9 +95,7 @@ const CheckoutPage = () => {
         <View 
             style={{ 
                 gap: 20, 
-                paddingHorizontal: 20, 
-                paddingTop: 20,
-                paddingBottom: 40, 
+                padding: 20,
                 backgroundColor: 'white',
                 alignItems: 'flex-end'
             }}
@@ -93,16 +112,18 @@ const CheckoutPage = () => {
             />
             <DetailInput 
                 label="Address:"
-                value={address}
-                onChangeText={setAddress} 
+                value={address.address}
+                onChangeText={(value) => setAddress({...address, address: value})} 
             />
             <DetailInput 
                 label="ZIP:"
-                value=""
+                value={address.zip}
+                onChangeText={(value) => setAddress({...address, zip: value})} 
             />
             <DetailInput 
                 label="City:"
-                value=""
+                value={address.city}
+                onChangeText={(value) => setAddress({...address, city: value})} 
             />
             <View style={{
                 width: '100%', 
@@ -119,7 +140,11 @@ const CheckoutPage = () => {
                     value={isSaved}
                 />
             </View>
-            <ThemedButton style={{width: 120, paddingVertical: 12, marginTop: 20}} onPress={pay}>
+            <ThemedButton 
+                disabled={!(address.address && address.zip && address.city)}
+                style={{width: 120, paddingVertical: 12, marginTop: 20}} 
+                onPress={pay}
+            >
                 <Text style={{ color: 'white', textAlign: 'center'}}>Proceed</Text>
             </ThemedButton>
         </View>
@@ -147,6 +172,6 @@ const styles = StyleSheet.create({
         color: 'white',
     },
     switch: {
-        transform: [{ scaleX: 1.5 }, { scaleY: 1.5 }], // Adjust scale values here
+        transform: [{ scaleX: 1.5 }, { scaleY: 1.5 }], 
       },
 })

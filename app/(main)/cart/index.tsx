@@ -29,6 +29,7 @@ const Cart = () => {
         };
     }, [socket])
 
+
     return <View style={styles.container}>
         <View style={styles.header}>
             <View style={{display: 'flex', flexDirection: 'row', gap: 15, alignItems: 'center'}}> 
@@ -55,7 +56,8 @@ const Cart = () => {
                 checkout={checkout}
                 remove={removeItem}
                 isEdit={isEdit}
-            />)}
+            />
+            )}
         </ScrollView> :
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center'}}>
             <Text>Your cart is empty</Text>

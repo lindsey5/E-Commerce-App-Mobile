@@ -1,11 +1,24 @@
 import { Tabs } from "expo-router"
-import { useColorScheme } from "react-native"
+import { useColorScheme, View } from "react-native"
 import { Colors } from "../../constants/Colors"
 import { Ionicons } from "@expo/vector-icons"
+import { useEffect, useState } from "react"
+import { fetchData } from "../../services/api"
+import CustomBadge from "../../components/Badge"
 
 export default function RootLayout() {
   const colorScheme = useColorScheme()
   const theme = Colors[colorScheme] ?? Colors.light
+  const [orders, setOrders] = useState<number>(0);
+
+  useEffect(() => {
+    const getOrdersAsync = async() => {
+      const response = await fetchData('/api/order')
+      setOrders(response.orders.length)
+    }
+
+    getOrdersAsync();
+  }, [])
 
   return (<Tabs
         screenOptions={{
@@ -38,11 +51,14 @@ export default function RootLayout() {
         <Tabs.Screen
           name="orders/index"
           options={{ title: "Orders", tabBarIcon: ({ focused }) => (
-            <Ionicons 
-              size={24} 
-              name={focused ? 'receipt': 'receipt-outline'} 
-              color={focused ? theme.iconColorFocused : theme.iconColor} 
-            />
+            <>
+              {orders > 0 && <CustomBadge text={orders.toString()}/>}
+              <Ionicons 
+                size={24} 
+                name={focused ? 'receipt': 'receipt-outline'} 
+                color={focused ? theme.iconColorFocused : theme.iconColor} 
+              />
+            </>
           )}}
         />
         <Tabs.Screen

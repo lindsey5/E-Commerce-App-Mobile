@@ -20,7 +20,7 @@ const Login = () => {
     const handleSubmit = async() => {
         setError('')
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
+        
         if (!emailRegex.test(data.email)) {
             setError('Invalid email format');
         }else if(data.email && data.password){
